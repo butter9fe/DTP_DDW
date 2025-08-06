@@ -9,13 +9,13 @@ df: pd.DataFrame = pd.read_csv(FILE_NAME)
 
 # All features in string, followed by just the features we're using for our model in an array
 # So this will look like [str, str, ..., list]
-features: list= CLEANED_FEATURES + [CLEANED_FEATURES]
+features: list= [CLEANED_FEATURES]
 for index, feature in enumerate(features):
     # (1) Extract the features and the target
     df_features, df_target = get_features_targets(df, feature, TARGET)
 
     # (2) Split the data set into training and test
-    data = split_data(df_features, df_target, random_state=100)
+    data = split_data(df_features, df_target)
 
     # (3) Build model
     model, J_storage = build_model_linreg(data["train_features"], data["train_target"])
@@ -30,4 +30,4 @@ for index, feature in enumerate(features):
     r2: float = r2_score(target, pred)
     mse: float = mean_squared_error(target, pred)
 
-    print(f"{feature}: R2: {r2} | MSE: {mse}")
+    print(f"{feature}: R2: {r2} | MSE: {mse} | Model: {model}")

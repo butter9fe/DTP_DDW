@@ -3,6 +3,16 @@ ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP",
 CLEANED_FEATURES=['AST', 'HDI', 'OADR', 'SR', 'OOP']
 TARGET = "LCR_OR"
 
+BETA = [[15.01646525],
+       [-3.3822622 ],
+       [-0.36274805],
+       [-1.01735793],
+       [ 3.05743524],
+       [ 0.77738778],
+       [ 5.30209168],
+       [ 1.76411581],
+       [-1.2687426 ]]
+
 countries_list = [
     "Albania", "Algeria", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
     "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Benin", "Bolivia",

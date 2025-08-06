@@ -26,8 +26,10 @@ def normalize_z(array: np.ndarray, columns_means: Optional[np.ndarray]=None,
     if columns_means is None: 
         columns_means = array.mean(axis=0).reshape(1, -1) # reshape output into 1 by N array shape 
     if columns_stds is None:
+        print("hi")
         columns_stds = array.std(axis=0).reshape(1, -1)
 
+    print(columns_stds)
     out: np.ndarray = (array - columns_means) / columns_stds
     
     assert out.shape == array.shape
