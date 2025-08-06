@@ -3,50 +3,29 @@ from constants import ALL_FEATURES, CLEANED_FEATURES, TARGET
 import numpy as np
 import pandas as pd
 
-# df: pd.DataFrame = pd.read_csv("Test_3.csv")
+df: pd.DataFrame = pd.read_csv("Test_3.csv")
 
-# # All features in string, followed by just the features we're using for our model in an array
-# # So this will look like [str, str, ..., list]
-# #features: list= ALL_FEATURES + [CLEANED_FEATURES]
-# for index, feature in enumerate(ALL_FEATURES):
-#     # Extract the features and the target
-#     df_features, df_target = get_features_targets(df, feature, TARGET)
+# All features in string, followed by just the features we're using for our model in an array
+# So this will look like [str, str, ..., list]
+#features: list= ALL_FEATURES + [CLEANED_FEATURES]
+for index, feature in enumerate(ALL_FEATURES):
+    # Extract the features and the target
+    df_features, df_target = get_features_targets(df, feature, TARGET)
 
-#     # Split the data set into training and test
-#     data = split_data(df_features, df_target)
+    # Split the data set into training and test
+    data = split_data(df_features, df_target)
 
-#     # Call build_model_linreg() function
-#     model, J_storage = build_model_linreg(data["train_features"], data["train_target"])
+    # Call build_model_linreg() function
+    model, J_storage = build_model_linreg(data["train_features"], data["train_target"])
 
-#     # Call the predict_linreg() method
-#     pred = predict_linreg(data["test_features"].to_numpy(), model["beta"], model["means"], model["stds"])
+    # Call the predict_linreg() method
+    pred = predict_linreg(data["test_features"].to_numpy(), model["beta"], model["means"], model["stds"])
 
-#     # Change target test set to a numpy array
-#     target: np.ndarray = data["test_target"].to_numpy()
+    # Change target test set to a numpy array
+    target: np.ndarray = data["test_target"].to_numpy()
 
-#     # Calculate r2 score by calling a function
-#     r2: float = r2_score(target, pred)
-#     mse: float = mean_squared_error(target, pred)
+    # Calculate r2 score by calling a function
+    r2: float = r2_score(target, pred)
+    mse: float = mean_squared_error(target, pred)
 
-#     print(f"{feature}: R2: {r2} | MSE: {mse}")
-
-class LungCancerData:
-    def __init__(self, EPI, AST, AQI, HDI, GDP, OADR, SR, OOP):
-        self.df: pd.DataFrame = pd.read_csv("Test_3.csv")
-        
-        features_array = [EPI, AST, AQI, HDI, GDP, OADR, SR, OOP]
-        self.features = pd.DataFrame(np.array(features_array).reshape(-1, len(features_array)))
-
-    def predict_lcr(self):
-        # Extract the features and the target
-        df_features, df_target = get_features_targets(self.df, CLEANED_FEATURES, TARGET)
-
-        # Split the data set into training and test
-        # data = split_data(df_features, df_target)
-
-        # Call build_model_linreg() function
-        model, J_storage = build_model_linreg(df_features, df_target)
-
-        # Call the predict_linreg() method
-        pred = predict_linreg(self.features.to_numpy(), model["beta"], model["means"], model["stds"])
-        return pred
+    print(f"{feature}: R2: {r2} | MSE: {mse}")

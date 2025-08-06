@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.axes as axes
 import seaborn as sns
 
+#region Data Preparation
 def normalize_z(array: np.ndarray, columns_means: Optional[np.ndarray]=None, 
                 columns_stds: Optional[np.ndarray]=None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -93,7 +94,9 @@ def split_data(df_feature: pd.DataFrame, df_target: pd.DataFrame,
     df_target_valid: pd.DataFrame = df_target.loc[valid_indexes, :]
     
     return {"train_features": df_feature_train, "test_features": df_feature_test, "valid_features": df_feature_valid, "train_target": df_target_train, "test_target": df_target_test, "valid_target": df_target_valid}
+#endregion Data Preparation
 
+#region Linear Regression
 def predict_linreg(array_feature: np.ndarray, beta: np.ndarray, 
                    means: Optional[np.ndarray]=None, 
                    stds: Optional[np.ndarray]=None) -> np.ndarray:
@@ -162,6 +165,7 @@ def gradient_descent_linreg(X: np.ndarray, y: np.ndarray, beta: np.ndarray,
     assert beta.shape == (X.shape[1], 1) # beta is a column vector 
     assert J_storage.shape == (num_iters, 1) 
     return beta, J_storage
+#endregion Linear Regression
 
 #region Evaluation Methods
 def r2_score(y: np.ndarray, ypred: np.ndarray) -> float:
@@ -179,7 +183,7 @@ def mean_squared_error(target: np.ndarray, pred: np.ndarray) -> float:
     return 1/n * np.squeeze(error_sq)
 #endregion Evaluation Methods
 
-#region Training Methods
+#region Model Building
 def build_model_linreg(df_feature_train: pd.DataFrame,
                        df_target_train: pd.DataFrame,
                        beta: Optional[np.ndarray] = None,
