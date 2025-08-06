@@ -26,7 +26,7 @@ class LungCancerPredictor:
         self.model, _ = build_model_linreg(df_features, df_target)
 
     def predict_lcr(self):
-        pred = predict_linreg(self.features.to_numpy(), self.model["beta"])
+        pred = predict_linreg(self.features.to_numpy(), self.model["beta"], self.model["means"], self.model["stds"])
         return pred
 
 # test = LungCancerPredictor({
