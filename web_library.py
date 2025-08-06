@@ -13,5 +13,8 @@ def get_variable_median(variable: str):
     return row.median()
 
 def get_or_from_ancestry(ancestry: str):
+    if (ancestry is None):
+        return 1
+    
     ancestry_row = or_df.loc[or_df['ANC'] == ancestry.capitalize()]
     return float(ancestry_row["OR"].iloc[0])

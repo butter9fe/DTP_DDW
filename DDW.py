@@ -99,22 +99,23 @@ def validate_inputs(inputs):
     """Validate user inputs and return validation results"""
     errors = []
     validated_inputs = {}
+
+    # Whole list is empty!
+    print(inputs.values())
+    if (all(not item for item in inputs.values())):
+        errors.append("Please enter at least 1 value!")
     
     for var_code, value in inputs.items():
-        if var_code == "ANC":
-            if not value or value.strip() == "":
-                errors.append(f"{VARIABLES[var_code]} is required")
-            else:
-                validated_inputs[var_code] = value.strip()
+        if not value:
+            validated_inputs[var_code] = None # To just use mean
+        elif var_code == "ANC":
+            validated_inputs[var_code] = value.strip()
         else:
-            if not value or value.strip() == "":
-                errors.append(f"{VARIABLES[var_code]} is required")
-            else:
-                try:
-                    float_val = float(value.strip())
-                    validated_inputs[var_code] = float_val
-                except ValueError:
-                    errors.append(f"{VARIABLES[var_code]} must be a valid number")
+            try:
+                float_val = float(value.strip())
+                validated_inputs[var_code] = float_val
+            except ValueError:
+                errors.append(f"{VARIABLES[var_code]} must be a valid number")
     
     return validated_inputs, errors
 
@@ -242,7 +243,7 @@ def assess_variable_quality(user_inputs, lcr_data):
     assessments = {}
     
     for var_code, value in user_inputs.items():
-        if var_code != "ANC" and var_code in lcr_data.columns:
+        if var_code != "ANC" and var_code in lcr_data.columns and value:
             median = lcr_data[var_code].median()
             
             # Determine if higher is better or worse based on variable type
@@ -310,7 +311,8 @@ def main():
     # Sidebar for input form
     with st.sidebar:
         st.title('🫁 LUCIA - Lung Cancer Insights & Action')
-        st.markdown("Enter your country's indicators:")
+        st.markdown("Enter your country's indicators")
+        st.caption("If you don't know any values, just leave them blank!")
         
         with st.form(key="indicator_form"):
             form_inputs = {}
@@ -432,6 +434,8 @@ def main():
             st.markdown("### 📋 Policy Recommendations")
             for i, rec in enumerate(recommendations, 1):
                 st.markdown(f"**{i}.** {rec}")
+        else:
+            st.write("#### Keep it up! 🎉")
     
     else:
         st.info("Complete the form in the sidebar to see your risk assessment.")
