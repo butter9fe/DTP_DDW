@@ -2,6 +2,7 @@ from library import predict_linreg
 from web_library import get_variable_median, get_or_from_ancestry
 from constants import CLEANED_FEATURES, BETA, MEANS, STDS
 import pandas as pd
+import numpy as np
 
 class LungCancerPredictor:
     def __init__(self, inputs: dict[str, float]):
@@ -19,7 +20,7 @@ class LungCancerPredictor:
         pred = predict_linreg(self.features.to_numpy(), BETA, MEANS, STDS)
 
         # Need to multiply back to get raw LCR value
-        return pred * self.or_value
+        return  np.squeeze(pred) * self.or_value
 
 # test = LungCancerPredictor({
 #     "EPI": 19.4,
