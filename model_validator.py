@@ -19,7 +19,7 @@ pred = predict_linreg(data["test_features"][best_features].to_numpy(), model["be
 target: np.ndarray = data["test_target"].to_numpy()
 
 # Calculate metrics
-r2: float = r2_score(target, pred)
+r2: float = r2_score(target, pred) 
 mse: float = mean_squared_error(target, pred)
 
 print(f"{best_features}: R2: {r2} | MSE: {mse}")

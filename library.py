@@ -244,7 +244,8 @@ def build_model_linreg(df_feature_train: pd.DataFrame,
 def build_model_with_validation(data: dict[str, pd.DataFrame],
                        feature_names: list[str],
                        alpha: float = 0.01,
-                       iterations: int = 1500) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
+                       iterations: int = 1500,
+                       min_improve_threshold: float = 0.03) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
     """
     Trains the model with different features and use validation set to select the best ones
 
@@ -274,7 +275,13 @@ def build_model_with_validation(data: dict[str, pd.DataFrame],
         evaluation = evaluate_model(model, df_feature_valid, data["valid_target"])
 
         print(f"Model: {features} | {evaluation}")
-        if (evaluation["cost"] < best_cost):
+
+        # To prevent overfitting validation data & adding unnecessary complexity,
+        # we only add additional complexity from the previous features if the improvement is over the desired amount
+        # previously just: evaluation["cost"] < best_cost
+        if ((evaluation["cost"] < best_cost and len(features) <= len(best_features)) \
+            or (evaluation["cost"] < best_cost * (1 - min_improve_threshold))):
+            print("Better model found!")
             best_cost = evaluation["cost"]
             best_features = features
             best_model = model
