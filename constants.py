@@ -36,92 +36,28 @@ countries_list = [
 
 
 policy_recommendations = {
-    ("HDI", "Too high"): [
-        "Ensure high development translates into equitable health outcomes.",
-        "Focus on marginalized communities that may be left behind.",
-        "Encourage sustainability practices in high-HDI regions."
-    ],
     ("HDI", "Too low"): [
         "Invest in public services like education, sanitation, and health.",
         "Implement social protection schemes for vulnerable populations.",
         "Use health outcomes as a central metric for development planning."
     ],
-    ("SR", "Too high"): [
+    "SR": [
         "Enforce plain packaging and restrict tobacco advertising.",
         "Implement high tobacco taxation and smoking cessation programs.",
         "Launch school-based anti-smoking campaigns."
     ],
-    ("SR", "Too low"): [
-        "Investigate under-reporting or cultural stigma in surveys.",
-        "Monitor e-cigarette or alternative tobacco product use.",
-        "Ensure youth education continues to promote non-smoking habits."
-    ],
-    ("EPI", "Too high"): [
-        "Maintain strong environmental protections with robust enforcement.",
-        "Share best practices across sectors and neighboring countries.",
-        "Monitor for performance consistency across regions."
-    ],
-    ("EPI", "Too low"): [
-        "Improve regulatory frameworks for environmental protection.",
-        "Invest in air, water, and land quality monitoring systems.",
-        "Enforce environmental impact assessments on new developments."
-    ],
-    ("AQI", "Too high"): [
-        "Introduce vehicle emissions inspections and low-emission zones.",
-        "Shift urban transport to electric and green alternatives.",
-        "Ban open-air waste burning and enforce clean fuel use."
-    ],
-    ("AQI", "Too low"): [
-        "Validate AQI values with independent monitoring systems.",
-        "Investigate if data under-reports peak pollution periods.",
-        "Maintain existing air quality efforts while planning urban expansion."
-    ],
-    ("PWD_A", "Too high"): [
-        "Encourage suburban development to ease core urban congestion.",
-        "Invest in mass transit to prevent crowding-related health risks.",
-        "Promote green and open public spaces in dense cities."
-    ],
-    ("PWD_A", "Too low"): [
-        "Revitalize underpopulated areas through incentives for businesses.",
-        "Support balanced population distribution through rural development.",
-        "Invest in telemedicine and mobile clinics in sparse regions."
-    ],
-    ("OADR", "Too high"): [
+    "OADR": [
         "Expand geriatric health and caregiving infrastructure.",
         "Encourage active aging programs to reduce dependency.",
         "Train more healthcare workers for elderly care sectors."
     ],
-    ("OADR", "Too low"): [
-        "Ensure youth support systems consider future aging trends.",
-        "Balance investment across age groups in public policy.",
-        "Promote intergenerational integration in housing and services."
-    ],
-    ("GDP", "Too high"): [
-        "Ensure economic growth translates to improved health equity.",
-        "Avoid neglecting environmental standards for GDP growth.",
-        "Reinvest gains into sustainable health and green infrastructure."
-    ],
-    ("GDP", "Too low"): [
-        "Support inclusive economic policies with health co-benefits.",
-        "Invest in job creation in green and care industries.",
-        "Link development funding to public health outcomes."
-    ],
-    ("AST", "Too high"): [
+    "AST": [
         "Promote urban greening and reflective roofing to cool cities.",
         "Implement early warning systems for heatwaves.",
         "Adapt building codes for temperature resilience."
     ],
-    ("AST", "Too low"): [
-        "Ensure buildings meet thermal comfort standards.",
-        "Promote insulation and heating access in colder zones.",
-        "Support vulnerable groups during cold seasons with aid."
-    ],
-    ("OOP", "Too high"): [
-        "Expand universal health coverage and reduce co-payments.",
-        "Subsidize essential medicine and chronic disease treatment.",
-        "Strengthen public healthcare systems to lower private costs."
-    ],
-    ("OOP", "Too low"): [
+    
+    "OOP": [
         "Validate data for potential underreporting or misclassification.",
         "Ensure government healthcare spending is effectively reaching people.",
         "Monitor for informal payments in public healthcare."
