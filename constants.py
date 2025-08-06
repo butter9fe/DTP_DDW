@@ -1,6 +1,7 @@
 import numpy as np
 
-FILE_NAME = "Data/Test_4.csv"
+FILE_NAME = "Data/LungCancer_Dataset.csv"
+OR_FILE_NAME= "Data/OddsRatio_Data.csv"
 ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP", "PDPC", "CO2", "HUM"]
 CLEANED_FEATURES=['AST', 'HDI', 'OADR', 'SR', 'OOP']
 TARGET = "LCR_OR"
