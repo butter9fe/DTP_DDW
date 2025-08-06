@@ -8,11 +8,12 @@ import urllib.request
 from lcr_predictor import LungCancerPredictor
 import constants
 import web_library 
+from textwrap import dedent
 
 # Page configuration
 st.set_page_config(
-    page_title="LUCIA - Lung Cancer Insights & Action",
-    page_icon="🫁",
+    page_title="LUCIA",
+    page_icon="🔓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -56,11 +57,11 @@ RISK_CONFIG = {
     'min_score': 1,
     'max_score': 48,
     'levels': [
-        (0.8, "Very High Rate", "red"),
-        (0.6, "High Rate", "orange"), 
-        (0.4, "Moderate Rate", "yellow"),
-        (0.2, "Low Rate", "lightgreen"),
-        (0.0, "Very Low Rate", "green")
+        (0.8, "Extreme risk level", "red"),
+        (0.6, "High risk level", "orange"), 
+        (0.4, "Moderate risk level", "yellow"),
+        (0.2, "Low risk level", "lightgreen"),
+        (0.0, "Minimal risk level", "green")
     ]
 }
 
@@ -249,19 +250,19 @@ def assess_variable_quality(user_inputs, lcr_data):
             # Determine if higher is better or worse based on variable type
             if var_code in ['HDI']:  # Higher is better
                 if value < median * 0.8:
-                    assessments[var_code] = ("Too low", "red")
+                    assessments[var_code] = ("Insufficient", web_library.hex_to_rgba("red", 0.4))
                 elif value > median * 1.2:
-                    assessments[var_code] = ("Excellent", "green")
+                    assessments[var_code] = ("Ideal", web_library.hex_to_rgba("green", 0.4))
                 else:
-                    assessments[var_code] = ("Good", "lightgreen")
+                    assessments[var_code] = ("Acceptable", web_library.hex_to_rgba("lightgreen", 0.4))
             
             elif var_code in ['SR', 'OOP', 'AST', 'OADR']:  # Lower is better
                 if value > median * 1.2:
-                    assessments[var_code] = ("Too high", "red")
+                    assessments[var_code] = ("Excessive", web_library.hex_to_rgba("red", 0.4))
                 elif value < median * 0.8:
-                    assessments[var_code] = ("Excellent", "green")
+                    assessments[var_code] = ("Ideal", web_library.hex_to_rgba("green", 0.4))
                 else:
-                    assessments[var_code] = ("Good", "lightgreen")
+                    assessments[var_code] = ("Acceptable", web_library.hex_to_rgba("lightgreen", 0.4))
     
     return assessments
 
@@ -270,8 +271,10 @@ def get_policy_recommendations(assessments):
     recommendations = []
     
     for var_code, (status, color) in assessments.items():
-        if status in ["Too high", "Too low"]:
-            key = (var_code, status)
+        print(status)
+        if status != "Acceptable":
+            key = var_code
+            print(key)
             if key in constants.policy_recommendations:
                 recommendations.extend(constants.policy_recommendations[key][:2])  # Limit to 2 per variable
     
@@ -310,9 +313,8 @@ def main():
     
     # Sidebar for input form
     with st.sidebar:
-        st.title('🫁 LUCIA - Lung Cancer Insights & Action')
-        st.markdown("Enter your country's indicators")
-        st.caption("If you don't know any values, just leave them blank!")
+        st.markdown("Enter country details")
+        st.caption("Leave this field blank if not applicable")
         
         with st.form(key="indicator_form"):
             form_inputs = {}
@@ -325,16 +327,16 @@ def main():
                         f"{var_label}",
                         value=str(current_value) if current_value else "",
                         key=f"input_{var_code}",
-                        help=f"Enter {var_label.lower()}"
+                        help=constants.HELP_TEXTS.get(var_code, f"Enter {var_label.lower()}")
                     )
             
             # Ancestry dropdown
-            form_inputs["ANC"] = st.selectbox(
-                "Ancestry",
+            form_inputs["ANC"] = st.selectbox("Ancestry",
                 options=["", "European", "Asian", "African"],
                 index=0 if not st.session_state.inputs.get("ANC") else 
                       ["", "European", "Asian", "African"].index(st.session_state.inputs.get("ANC")),
-                key="input_ANC"
+                key="input_ANC",
+                help=constants.HELP_TEXTS.get("ANC", "Select your ancestry")
             )
             
             submitted = st.form_submit_button("Calculate Rate", type="primary")
@@ -357,11 +359,13 @@ def main():
     
     # Column 1: Map
     with col1:
-        st.header('🌍 Global Rate Map')
+        st.title('L.U.C.I.A.')
+        st.write('Lung Cancer Insights & Action')
+        st.subheader('Map Overview')
         
         # Country selection dropdown
         countries = ["Global View"] + sorted(list(country_locations.keys()))
-        selected_country = st.selectbox("Focus on country:", countries, key="country_selector")
+        selected_country = st.selectbox("Insight for:", countries, key="country_selector")
         
         # Set view state
         if selected_country != "Global View" and selected_country in country_locations:
@@ -399,50 +403,93 @@ def main():
             ),
             key=f"map_{selected_country.lower().replace(' ', '_')}"
         )
-    
-    # Column 2: Rate Assessment Results
-    if st.session_state.submitted:
-        # Display risk score
-        risk_score = st.session_state.user_risk
-        risk_label, risk_color = get_risk_label_color(risk_score)
-        
-        st.markdown(f"""
-        <div style="text-align: center; padding: 20px; border: 2px solid {risk_color}; border-radius: 10px; background-color: rgba(255,255,255,0.1)">
-            <h2>Predicted Rate Score</h2>
-            <h1 style="color: {risk_color}; font-size: 3em">{risk_score:.2f}</h1>
-            <h3 style="color: {risk_color}">{risk_label}</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("### Variable Assessment")
-        
-        # Assess variables
-        assessments = assess_variable_quality(st.session_state.inputs, lcr_data)
-        
-        for var_code, (status, color) in assessments.items():
-            value = st.session_state.inputs[var_code]
+        if st.session_state.submitted:
+            # Display risk score
+            risk_score = st.session_state.user_risk
+            risk_label, risk_color = get_risk_label_color(risk_score)
+            
+            border_color = web_library.hex_to_rgba(risk_color, 0.3)
+            title_color = web_library.hex_to_rgba(risk_color, 0.6)
+            score_color = web_library.hex_to_rgba(risk_color, 0.8)
+            label_color = web_library.hex_to_rgba(risk_color, 0.5)
+
+            
             st.markdown(f"""
-            <div style="display: flex; justify-content: space-between; padding: 5px; margin: 5px 0; background-color: {color}; border-radius: 5px; color: white if {color} == 'red' else black">
-                <span><strong>{VARIABLES.get(var_code, var_code)}:</strong> {value}</span>
-                <span>{status}</span>
+            <div style="display: flex; justify-content: center;">
+                <div style="text-align: center;
+                            padding: 20px;
+                            border: 2px solid {border_color};
+                            border-radius: 10px;
+                            background-color: rgba(255,255,255,0.05);
+                            width: 864px;">
+                    <h2 style="color: {title_color};">Attention Score</h2>
+                    <h1 style="color: {score_color}; font-size: 3em">{risk_score:.2f}</h1>
+                    <h3 style="color: {label_color};">{risk_label}</h3>
+                </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            st.markdown("### Variable Assessment")
+            
+            # Assess variables
+            assessments = assess_variable_quality(st.session_state.inputs, lcr_data)
+            
+
+            html = "<div style='display: flex; gap: 16px;'>"
+
+            for var_code, (status, rgba_color) in assessments.items():
+                value = st.session_state.inputs.get(var_code)
+                label = VARIABLES.get(var_code, var_code)
+                display_value = f"{value:.2f}" if isinstance(value, (int, float)) else "-"
+
+                html += dedent(f"""
+                    <div style="
+                        background-color: {rgba_color};
+                        padding: 16px;
+                        border-radius: 10px;
+                        width: 160px;
+                        height: 140px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        text-align: center;
+                        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+                    ">
+                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px;">
+                            {label}
+                        </div>
+                        <div style="font-size: 18px; font-weight: 600;">
+                            {display_value}
+                        </div>
+                        <div style="font-size: 14px; margin-top: 6px;">
+                            {status}
+                        </div>
+                    </div>
+                """)
+
+            html += "</div>"
+
+            #print html
+            st.markdown(html, unsafe_allow_html=True)
+            
+            # Policy recommendations
+            recommendations = get_policy_recommendations(assessments)
+            if recommendations:
+                st.markdown("### 🏳️ Policy Recommendations")
+                for i, rec in enumerate(recommendations, 1):
+                    st.markdown(f"**{i}.** {rec}")
+            else:
+                st.write("#### Keep it up! 🎉")
         
-        # Policy recommendations
-        recommendations = get_policy_recommendations(assessments)
-        if recommendations:
-            st.markdown("### 📋 Policy Recommendations")
-            for i, rec in enumerate(recommendations, 1):
-                st.markdown(f"**{i}.** {rec}")
         else:
-            st.write("#### Keep it up! 🎉")
+            st.info("Complete the form in the sidebar to see your risk assessment.")
     
-    else:
-        st.info("Complete the form in the sidebar to see your risk assessment.")
     
-    # Column 3: Comparison Charts
+    
+    # Column 2: Comparison Charts
     with col2:
-        st.header('📊 Comparison')
+        st.subheader('Cross-country comparison')
         
         if st.session_state.submitted:
             if selected_country == "Global View":

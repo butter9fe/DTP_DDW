@@ -18,3 +18,29 @@ def get_or_from_ancestry(ancestry: str):
     
     ancestry_row = or_df.loc[or_df['ANC'] == ancestry.capitalize()]
     return float(ancestry_row["OR"].iloc[0])
+
+def hex_to_rgba(color: str, alpha: float) -> str:
+    
+    named_colors = {
+        "red": "#FF0000",
+        "orange": "#FFA500",
+        "yellow": "#FFFF00",
+        "lightgreen": "#90EE90",
+        "green": "#008000",
+        "gray": "#808080"
+    }
+
+    #convert to hex
+    if color in named_colors:
+        color = named_colors[color]
+
+    #remove #
+    color = color.lstrip('#')
+    if len(color) != 6:
+        raise ValueError(f"Invalid hex color format: {color}")
+    
+    #convert to RGBA
+    r = int(color[0:2], 16)
+    g = int(color[2:4], 16)
+    b = int(color[4:6], 16)
+    return f"rgba({r}, {g}, {b}, {alpha})"

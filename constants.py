@@ -36,7 +36,7 @@ countries_list = [
 
 
 policy_recommendations = {
-    ("HDI", "Too low"): [
+    "HDI": [
         "Invest in public services like education, sanitation, and health.",
         "Implement social protection schemes for vulnerable populations.",
         "Use health outcomes as a central metric for development planning."
@@ -63,3 +63,11 @@ policy_recommendations = {
         "Monitor for informal payments in public healthcare."
     ]
 }
+
+HELP_TEXTS = {
+    "AST": "Average surface temperature (°C) for the country.",
+    "HDI": "Human Development Index: Composite of life expectancy, education, and income (0~1).",
+    "OADR": "Old-age dependency ratio: % of population aged 65+ per 100 working-age people.",
+    "SR": "Smoking rate: % of adult population who smoke regularly.",
+    "OOP": "Out-of-pocket health expenditure as % of total health spending.",
+    "ANC": "Choose the ancestry that most closely matches your genetic background."}
