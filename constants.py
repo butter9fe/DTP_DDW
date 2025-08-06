@@ -1,6 +1,6 @@
 FILE_NAME = "Data/Test_4.csv"
 ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP", "PDPC", "CO2", "HUM"]
-CLEANED_FEATURES=['AST', 'HDI', 'OADR', 'SR', 'OOP']
+CLEANED_FEATURES=["EPI", "AST", "AQI", "HDI", "GDP", "OADR", "SR", "OOP"]
 TARGET = "LCR_OR"
 
 BETA = [[15.01646525],
