@@ -1,2 +1,3 @@
-ALL_FEATURES = ["HDI", "SR", "EPI", "AQI", "PWD_A", "OADR", "GDP", "AST", "OOP"]
+ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP"]
+CLEANED_FEATURES=["EPI", "AST", "AQI", "HDI", "GDP", "OADR", "SR", "OOP"]
 TARGET = "LCR_OR"
