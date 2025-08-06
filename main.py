@@ -1,24 +1,26 @@
-from library import get_features_targets, split_data, build_model_linreg, predict_linreg, r2_score, mean_squared_error, normalize_z
-from constants import ALL_FEATURES, CLEANED_FEATURES, TARGET
+from library import get_features_targets, split_data, build_model_linreg, predict_linreg, r2_score, mean_squared_error
+from constants import CLEANED_FEATURES, TARGET, FILE_NAME
 import numpy as np
 import pandas as pd
 
-df: pd.DataFrame = pd.read_csv("Test_3.csv")
+df: pd.DataFrame = pd.read_csv(FILE_NAME)
+
+# This is just a playground file, to delete in final submission!
 
 # All features in string, followed by just the features we're using for our model in an array
 # So this will look like [str, str, ..., list]
-#features: list= ALL_FEATURES + [CLEANED_FEATURES]
-for index, feature in enumerate(ALL_FEATURES):
-    # Extract the features and the target
+features: list= CLEANED_FEATURES + [CLEANED_FEATURES]
+for index, feature in enumerate(features):
+    # (1) Extract the features and the target
     df_features, df_target = get_features_targets(df, feature, TARGET)
 
-    # Split the data set into training and test
-    data = split_data(df_features, df_target)
+    # (2) Split the data set into training and test
+    data = split_data(df_features, df_target, random_state=100)
 
-    # Call build_model_linreg() function
+    # (3) Build model
     model, J_storage = build_model_linreg(data["train_features"], data["train_target"])
 
-    # Call the predict_linreg() method
+    # (4) Now try predicting with [Test] dataset!
     pred = predict_linreg(data["test_features"].to_numpy(), model["beta"], model["means"], model["stds"])
 
     # Change target test set to a numpy array

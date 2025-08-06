@@ -1,8 +1,4 @@
-from typing import TypeAlias
 from typing import Optional, Any    
-
-Number: TypeAlias = int | float
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -76,14 +72,14 @@ def split_data(df_feature: pd.DataFrame, df_target: pd.DataFrame,
     test_indexes = np.random.choice(indexes, test_size, replace=False)
     
     # find the indexes that are not selected by the test index
-    indexes = indexes.drop(test_indexes)
+    removed_indexes = indexes.drop(test_indexes)
 
     # Find indexes of the [Validation] data set
     valid_size: int = int(valid_proportion * len(indexes))
-    valid_indexes = np.random.choice(indexes, valid_size, replace=False)
+    valid_indexes = np.random.choice(removed_indexes, valid_size, replace=False)
 
     # [Training] data set will be the remainining indexes
-    train_indexes = indexes.drop(valid_indexes)
+    train_indexes = removed_indexes.drop(valid_indexes)
     
     # time to create the dataframe of feature & target for each set (train & test)
     df_feature_train: pd.DataFrame = df_feature.loc[train_indexes, :]  
@@ -181,6 +177,35 @@ def mean_squared_error(target: np.ndarray, pred: np.ndarray) -> float:
     error = target - pred #(y - yhat)^2
     error_sq = np.matmul(error.T, error)
     return 1/n * np.squeeze(error_sq)
+
+def evaluate_model(model: dict[str, Any], valid_features: np.ndarray, valid_target: np.ndarray) -> dict[str, float]:
+    """
+    Evaluates model with validation dataset
+
+    Returns:
+        dict[str, float]: Dictionary with metrics containing:
+            - cost: J score
+            - r2
+            - mse
+    """
+    # (1) Prepare X matrix with bias term
+    valid_normalised, _, _ = normalize_z(valid_features, model["means"], model["stds"])
+    x_valid = prepare_feature(valid_normalised)
+
+    # (2) Calculate validation cost (J score!)
+    validation_cost = compute_cost_linreg(x_valid, valid_target, model["beta"])
+
+    # (3) Calculate other metrics
+    valid_pred = predict_linreg(valid_features, model["beta"], model["means"], model["stds"])
+    r2 = r2_score(valid_target, valid_pred)
+    mse = mean_squared_error(valid_target, valid_pred)
+
+    return {
+        "cost": validation_cost,
+        "r2": r2,
+        "mse": mse
+    }
+
 #endregion Evaluation Methods
 
 #region Model Building
@@ -216,21 +241,83 @@ def build_model_linreg(df_feature_train: pd.DataFrame,
     assert J_storage.shape == (iterations, 1) # make sure we have recorded #iterations of error
     return model, J_storage
 
-def train_with_validation(df_feature_train: pd.DataFrame,
-                       df_target_train: pd.DataFrame,
-                       df_feature_valid: pd.DataFrame,
-                       df_target_valid: pd.DataFrame,
-                       alpha_values: float = [0.01, 0.01, 0.1],
-                       iterations_values: int = [500, 1000, 1500]) -> tuple[dict[str, Any], dict]:
+def build_model_with_validation(data: dict[str, pd.DataFrame],
+                       feature_names: list[str],
+                       alpha: float = 0.01,
+                       iterations: int = 1500) -> tuple[dict[str, Any], list[str], dict[str, Any]]:
     """
-    Trains the model with different parameters and use validation set to select the best ones
+    Trains the model with different features and use validation set to select the best ones
 
     Returns:
         tuple containing:
-            - best_model: Dictionary with "beta", "means", "std" arrays
-            - best_params: Dictionary with best "alpha" and "iteration" values
-            - 
+            - best_model (dictionary): Contains "beta", "means", "std" arrays
+            - best_features (array): Best combination of features
     """
-    best_r2 = -np.inf
+    best_model = {}
+    best_features = []
+    best_cost = np.inf
+    all_combis = get_all_feature_combinations(feature_names)
 
-#endregion Training Methods
+    # Loop through every combination of features to build the best model!
+    for features in all_combis:
+       # (1) Extract the features for training & validation
+       # Data was already split previously, so we're just taking a "subset" with the new feature combinations
+        df_feature_train: pd.DataFrame = data["train_features"][features]
+        df_feature_valid: pd.DataFrame = data["valid_features"][features]
+
+        # (2) Splitting was already done in previous stage
+
+        # (3) Build model
+        model, _ = build_model_linreg(df_feature_train, data["train_target"], alpha=alpha, iterations=iterations)
+        
+        # (4) Evaluate model
+        evaluation = evaluate_model(model, df_feature_valid, data["valid_target"])
+
+        print(f"Model: {features} | {evaluation}")
+        if (evaluation["cost"] < best_cost):
+            best_cost = evaluation["cost"]
+            best_features = features
+            best_model = model
+
+    return best_model, best_features
+#endregion Model Building
+
+#region Helper Methods
+def combinations(iterable, r):
+    """
+    Source: https://docs.python.org/3/library/itertools.html#itertools.combinations
+    Return r length subsequences of elements from the input iterable. 
+    
+    Examples:
+    combinations('ABCD', 2) → AB AC AD BC BD CD
+    combinations(range(4), 3) → 012 013 023 123
+    """
+    pool = list(iterable)
+    n = len(pool)
+    if r > n:
+        return
+    indices = list(range(r))
+
+    yield list(pool[i] for i in indices)
+    while True:
+        for i in reversed(range(r)):
+            if indices[i] != i + n - r:
+                break
+        else:
+            return
+        indices[i] += 1
+        for j in range(i+1, r):
+            indices[j] = indices[j-1] + 1
+        yield list(pool[i] for i in indices)
+
+def get_all_feature_combinations(features: pd.DataFrame) -> list[str]:
+    """
+    Get all possible combinations of feature names
+    """
+    all_combis = []
+    for i in range(1, len(features) + 1):
+        for combo in list(combinations(features, i)):
+            all_combis.append(combo)
+
+    return all_combis
+#endregion

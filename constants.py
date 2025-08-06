@@ -1,6 +1,6 @@
-FILE_NAME = "Test_3.csv"
-ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP"]
-CLEANED_FEATURES=["EPI", "AST", "AQI", "HDI", "GDP", "OADR", "SR", "OOP"]
+FILE_NAME = "Data/Test_4.csv"
+ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP", "PDPC", "CO2", "HUM"]
+CLEANED_FEATURES=['EPI', 'AST', 'AQI', 'HDI', 'GDP', 'OADR', 'SR', 'OOP']
 TARGET = "LCR_OR"
 
 countries_list = [
