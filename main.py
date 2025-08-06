@@ -7,8 +7,8 @@ df: pd.DataFrame = pd.read_csv("Test_3.csv")
 
 # All features in string, followed by just the features we're using for our model in an array
 # So this will look like [str, str, ..., list]
-features: list= ALL_FEATURES + [CLEANED_FEATURES]
-for index, feature in enumerate(features):
+#features: list= ALL_FEATURES + [CLEANED_FEATURES]
+for index, feature in enumerate(ALL_FEATURES):
     # Extract the features and the target
     df_features, df_target = get_features_targets(df, feature, TARGET)
 
