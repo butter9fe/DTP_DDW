@@ -1,6 +1,6 @@
-from library import get_features_targets, build_model_linreg, predict_linreg, split_data
+from library import predict_linreg
 from web_library import get_variable_median
-from constants import FILE_NAME, CLEANED_FEATURES, TARGET, BETA
+from constants import CLEANED_FEATURES, BETA, MEANS, STDS
 import pandas as pd
 
 class LungCancerPredictor:
@@ -11,22 +11,9 @@ class LungCancerPredictor:
 
         self.features = pd.Series(features).to_frame().T # Convert dictionary to series as a row
         self.features = self.features[CLEANED_FEATURES] # Reorder features to match training data
-        self._build_model()
-
-    def _build_model(self):
-        df: pd.DataFrame = pd.read_csv(FILE_NAME)
-
-        # Extract the features and the target
-        df_features, df_target = get_features_targets(df, CLEANED_FEATURES, TARGET)
-
-        # Split the data set into training and test
-        #data = split_data(df_features, df_target)
-
-        # Call build_model_linreg() function
-        self.model, _ = build_model_linreg(df_features, df_target)
 
     def predict_lcr(self):
-        pred = predict_linreg(self.features.to_numpy(), self.model["beta"], self.model["means"], self.model["stds"])
+        pred = predict_linreg(self.features.to_numpy(), BETA, MEANS, STDS)
         return pred
 
 # test = LungCancerPredictor({

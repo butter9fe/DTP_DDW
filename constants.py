@@ -1,17 +1,14 @@
+import numpy as np
+
 FILE_NAME = "Data/Test_4.csv"
 ALL_FEATURES = ["EPI", "AST", "AQI", "HDI", "GDP", "PWD_A", "OADR", "SR", "OOP", "PDPC", "CO2", "HUM"]
-CLEANED_FEATURES=["EPI", "AST", "AQI", "HDI", "GDP", "OADR", "SR", "OOP"]
+CLEANED_FEATURES=['AST', 'HDI', 'OADR', 'SR', 'OOP']
 TARGET = "LCR_OR"
 
-BETA = [[15.01646525],
-       [-3.3822622 ],
-       [-0.36274805],
-       [-1.01735793],
-       [ 3.05743524],
-       [ 0.77738778],
-       [ 5.30209168],
-       [ 1.76411581],
-       [-1.2687426 ]]
+BETA = np.array([[13.38678921725653], [-1.7909773656139059], [1.951746012410291], [2.837287747172861], [2.8995312299033595], [-0.834747296200608]])
+
+MEANS = np.array([[18.78957407407407, 0.760240740740741, 16.593895533333335, 19.583333333333332, 37.61342059664815]])
+STDS = np.array([[6.843772055541939, 0.12913228003717525, 11.336119367246889, 10.279334716907618, 16.63743731775029]])
 
 countries_list = [
     "Albania", "Algeria", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
