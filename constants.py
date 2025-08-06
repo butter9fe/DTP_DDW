@@ -1,0 +1,2 @@
+ALL_FEATURES = ["HDI", "SR", "EPI", "AQI", "PWD_A", "OADR", "GDP", "AST", "OOP"]
+TARGET = "LCR_OR"
