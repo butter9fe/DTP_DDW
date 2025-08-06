@@ -353,14 +353,14 @@ def main():
                     st.session_state.submitted = True
                     st.success("✅ Rate calculated successfully!")
                     st.rerun()
+    st.image('Data/banner_image.jpg')
     
     # Main content area - 2 columns
     col1, col2 = st.columns([5, 2], gap='medium')
     
     # Column 1: Map
     with col1:
-        st.title('L.U.C.I.A.')
-        st.write('Lung Cancer Insights & Action')
+        
         st.subheader('Map Overview')
         
         # Country selection dropdown
