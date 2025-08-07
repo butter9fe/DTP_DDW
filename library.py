@@ -9,13 +9,8 @@ import seaborn as sns
 def normalize_z(array: np.ndarray, columns_means: Optional[np.ndarray]=None, 
                 columns_stds: Optional[np.ndarray]=None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    (1) Normalize the dataset -> between -1 to 1\n
+    Normalize the dataset -> between -1 to 1
     Formula: yhat = b0 + b1x
-
-    Args:
-        array (np.ndarray): numpy array to normalise (eg: training feature data)
-        columns_means (Optional[np.ndarray], optional): _description_. Defaults to None.
-        columns_stds (Optional[np.ndarray], optional): _description_. Defaults to None.
 
     Returns:
         tuple[np.ndarray, np.ndarray, np.ndarray]: normalized array, column means, column stds

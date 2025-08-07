@@ -21,16 +21,3 @@ class LungCancerPredictor:
 
         # Need to multiply back to get raw LCR value
         return  np.squeeze(pred) * self.or_value
-
-# test = LungCancerPredictor({
-#     "EPI": 19.4,
-#     "AST": 25.04,
-#     "AQI": 28.2,
-#     "HDI": 0.609,
-#     "GDP": 5177.4326,
-#     "OADR": 10.05489,
-#     "SR": 44.4,
-#     "OOP": 78.24772727,
-#     "ANC": "Asian"
-# })
-# print(test.predict_lcr())
