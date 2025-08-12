@@ -80,7 +80,7 @@ def load_geojson():
 @st.cache_data
 def load_country_locations():
     """Load and process country location data"""
-    df = pd.read_csv("Data/country-capital-lat-long-population.csv")
+    df = pd.read_csv("Data/location_zoom_country.csv")
     df["Country"] = df["Country"].str.strip()
     
     # Filter for required countries
@@ -89,9 +89,9 @@ def load_country_locations():
     # Create location dictionary
     return {
         row["Country"]: {
-            "lat": float(row["Latitude"]),
-            "lon": float(row["Longitude"]),
-            "zoom": 6.0
+            "lat": float(row["Latitude "]),
+            "lon": float(row["Longitude "]),
+            "zoom": float(row["Zoom"])
         }
         for _, row in df_filtered.iterrows()
     }
