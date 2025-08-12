@@ -37,30 +37,25 @@ countries_list = [
 
 policy_recommendations = {
     "HDI": [
-        "Invest in public services like education, sanitation, and health.",
-        "Implement social protection schemes for vulnerable populations.",
-        "Use health outcomes as a central metric for development planning."
+        "Implement social protection schemes for vulnerable populations. (HDI)",
+        "Use health outcomes as a central metric for development planning. (HDI)"
     ],
     "SR": [
-        "Enforce plain packaging and restrict tobacco advertising.",
-        "Implement high tobacco taxation and smoking cessation programs.",
-        "Launch school-based anti-smoking campaigns."
+        "Enforce plain packaging, restrict tobacco advertising, launch school-based anti-smkoing campaigns. (SR)",
+        "Implement high tobacco taxation and smoking cessation programs. (SR)"
     ],
     "OADR": [
-        "Expand geriatric health and caregiving infrastructure.",
-        "Encourage active aging programs to reduce dependency.",
-        "Train more healthcare workers for elderly care sectors."
+        "Expand geriatric health and caregiving infrastructure. (OADR)",
+        "Encourage active aging programs to reduce dependency. (OADR)"
     ],
     "AST": [
-        "Promote urban greening and reflective roofing to cool cities.",
-        "Implement early warning systems for heatwaves.",
-        "Adapt building codes for temperature resilience."
+        "Promote urban greening and reflective roofing to cool cities. (AST)",
+        "Implement early warning systems for heatwaves. (AST)"
     ],
     
     "OOP": [
-        "Validate data for potential underreporting or misclassification.",
-        "Ensure government healthcare spending is effectively reaching people.",
-        "Monitor for informal payments in public healthcare."
+        "Validate data for potential underreporting or misclassification. (OOP)",
+        "Expand public and private health insurance coverage to reduce individuals’ out-of-pocket medical expenses. (OOP)"
     ]
 }
 

@@ -9,6 +9,7 @@ from lcr_predictor import LungCancerPredictor
 import constants
 import web_library 
 from textwrap import dedent
+import plotly.io as pio
 
 # Page configuration
 st.set_page_config(
@@ -163,6 +164,43 @@ def get_country_rank(lcr_data, user_risk):
     result = result.sort_values('LCR').reset_index(drop=True)
     
     return result, user_rank
+HIGHER_BETTER = {'HDI'}
+LOWER_BETTER = {'SR', 'OOP', 'AST', 'OADR'}
+
+def compute_variable_severity(user_inputs: dict, lcr_data: pd.DataFrame) -> dict[str, float]:
+    """
+    Returns a non-negative severity score per variable.
+    Score is 0 when the value deviates in a *good* direction,
+    and >0 when it deviates in the *bad* direction.
+    Scale: fraction away from median (e.g., 0.25 = 25% away in bad direction).
+    """
+    severities: dict[str, float] = {}
+
+    for var_code, val in user_inputs.items():
+        if var_code not in lcr_data.columns or val is None or var_code == "ANC":
+            continue
+
+        median = lcr_data[var_code].median()
+        if median is None or pd.isna(median) or median == 0:
+            # Avoid divide-by-zero; skip or treat as 0 severity
+            severities[var_code] = 0.0
+            continue
+
+        ratio = (val - median) / median
+
+        if var_code in LOWER_BETTER:
+            # Bad only when value > median (higher than typical = worse)
+            severity = max(0.0, ratio)  # e.g., 0.30 means 30% too high
+        elif var_code in HIGHER_BETTER:
+            # Bad only when value < median (lower than typical = worse)
+            severity = max(0.0, -ratio) # e.g., 0.20 means 20% too low
+        else:
+            # Unknown direction: penalize absolute deviation (conservative)
+            severity = abs(ratio)
+
+        severities[var_code] = float(severity)
+
+    return severities
 
 def create_ranking_chart(lcr_data, user_risk):
     """Create ranking comparison chart"""
@@ -266,19 +304,27 @@ def assess_variable_quality(user_inputs, lcr_data):
     
     return assessments
 
-def get_policy_recommendations(assessments):
-    """Get policy recommendations based on assessments"""
-    recommendations = []
-    
-    for var_code, (status, color) in assessments.items():
-        print(status)
-        if status != "Acceptable":
-            key = var_code
-            print(key)
-            if key in constants.policy_recommendations:
-                recommendations.extend(constants.policy_recommendations[key][:2])  # Limit to 2 per variable
-    
-    return recommendations[:5]  # Limit total recommendations
+def get_policy_recommendations(assessments: dict, severities: dict, max_total: int = 5) -> list[str]:
+    """
+    Pick policies for variables with the highest 'bad-direction' severity first.
+    Only variables not 'Acceptable' are considered. Ties follow dict order.
+    """
+    # Filter to non-acceptable variables and sort by severity desc
+    ranked_vars = sorted(
+        (v for v in assessments.keys() if assessments[v][0] != "Acceptable"),
+        key=lambda v: severities.get(v, 0.0),
+        reverse=True
+    )
+
+    recs: list[str] = []
+    for var_code in ranked_vars:
+        if var_code in constants.policy_recommendations:
+            #take top 2 per variable 
+            for r in constants.policy_recommendations[var_code][:2]:
+                recs.append(r)
+                if len(recs) >= max_total:
+                    return recs
+    return recs
 
 def process_geojson_data(geojson, lcr_data):
     """Process GeoJSON data with risk scores"""
@@ -300,6 +346,55 @@ def process_geojson_data(geojson, lcr_data):
             feature["properties"]["risk_score"] = None
             feature["properties"]["raw_score"] = None
             feature["properties"]["risk_level"] = "No Data"
+
+def create_circular_progress_chart(score, risk_label, risk_color):
+    """Create a circular progress chart for the attention score"""
+    # Normalize score to percentage (0-100)
+    normalized_score = normalize_score(score) * 100
+    
+    # Create the circular progress chart
+    fig = go.Figure()
+    
+    # Create a donut chart with custom styling
+    fig.add_trace(go.Pie(
+        values=[normalized_score, 100 - normalized_score],
+        hole=0.75,  # Larger hole for cleaner look
+        showlegend=False,
+        textinfo='none',
+        hoverinfo='skip',
+        marker=dict(
+            colors=[risk_color, '#E5E7EB'],  # Progress color and light gray background
+            line=dict(width=0)
+        ),
+        sort=False,
+        direction='clockwise',
+        rotation=90  # Start from top
+    ))
+    
+    # Update layout for clean appearance
+    fig.update_layout(
+        width=180,
+        height=180,
+        margin=dict(l=0, r=0, t=0, b=0),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        showlegend=False,
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        annotations=[
+            dict(
+                x=0.5, y=0.5,  # Use relative positioning (0.5 = center)
+                text=f"<b>{normalized_score:.0f}%</b>",
+                showarrow=False,
+                font=dict(size=24, color='#FFFFFF', family='Arial, sans-serif'),
+                align='center',
+                xref='paper',  # Reference to paper coordinates
+                yref='paper'   # Reference to paper coordinates
+            )
+        ]
+    )
+    
+    return fig
 
 def main():
     """Main application logic"""
@@ -351,10 +446,84 @@ def main():
                     st.session_state.inputs = validated_inputs
                     st.session_state.user_risk = predict_risk(validated_inputs)
                     st.session_state.submitted = True
-                    st.success("✅ Rate calculated successfully!")
+                    st.success(" Rate calculated successfully!")
                     st.rerun()
     st.image('Data/banner_image.jpg')
     
+    def create_variable_progress_chart(var_code, value, status, rgba_color, var_label):
+        """Create a circular progress chart for individual variables"""
+        # Define ranges for different variables
+        ranges = {
+            'AST': (0, 45),      # Surface Temperature
+            'HDI': (0, 1),       # Human Development Index  
+            'OADR': (0, 100),    # Old Age Dependency Ratio
+            'SR': (0, 100),      # Smoking Rates
+            'OOP': (0, 100)      # Out-of-pocket Health Expenditure
+        }
+        
+        # Get the range for this variable
+        min_val, max_val = ranges.get(var_code, (0, 100))
+        
+        # Calculate percentage based on the variable's range
+        if value is not None:
+            percentage = min(100, max(0, ((value - min_val) / (max_val - min_val)) * 100))
+        else:
+            percentage = 0
+        
+        # Extract RGB values from rgba_color for better control
+        # Convert status to color
+        color_map = {
+            'Ideal': '#10B981',      # Green
+            'Acceptable': '#84CC16',  # Light green  
+            'Insufficient': '#EF4444', # Red
+            'Excessive': '#EF4444'    # Red
+        }
+        progress_color = color_map.get(status, '#6B7280')
+        
+        # Create the circular progress chart
+        fig = go.Figure()
+        
+        # Create a donut chart
+        fig.add_trace(go.Pie(
+            values=[percentage, 100 - percentage],
+            hole=0.75,
+            showlegend=False,
+            textinfo='none',
+            hoverinfo='skip',
+            marker=dict(
+                colors=[progress_color, '#E5E7EB'],
+                line=dict(width=0)
+            ),
+            sort=False,
+            direction='clockwise',
+            rotation=90
+        ))
+        
+        # Update layout
+        fig.update_layout(
+            width=120,
+            height=120,
+            margin=dict(l=0, r=0, t=0, b=0),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            showlegend=False,
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            annotations=[
+                dict(
+                    x=0.5, y=0.5,
+                    text=f"<b>{value:.1f}</b>" if value is not None else "<b>-</b>",
+                    showarrow=False,
+                    font=dict(size=14, color='#FFFFFF', family='Arial, sans-serif'),
+                    align='center',
+                    xref='paper',
+                    yref='paper'
+                )
+            ]
+        )
+        
+        return fig
+
     # Main content area - 2 columns
     col1, col2 = st.columns([5, 2], gap='medium')
     
@@ -403,82 +572,102 @@ def main():
             ),
             key=f"map_{selected_country.lower().replace(' ', '_')}"
         )
+
+        
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
+
         if st.session_state.submitted:
             # Display risk score
             risk_score = st.session_state.user_risk
             risk_label, risk_color = get_risk_label_color(risk_score)
             
-            border_color = web_library.hex_to_rgba(risk_color, 0.3)
-            title_color = web_library.hex_to_rgba(risk_color, 0.6)
-            score_color = web_library.hex_to_rgba(risk_color, 0.8)
-            label_color = web_library.hex_to_rgba(risk_color, 0.5)
+            chart_col, content_col = st.columns([1, 3])
+            
+            with chart_col:
+                # Create and display circular progress chart
+                progress_fig = create_circular_progress_chart(risk_score, risk_label, risk_color)
+                st.plotly_chart(progress_fig, use_container_width=True, config={'displayModeBar': False})
+            
+            with content_col:
+                st.markdown("### Attention Score Analysis")
+                st.markdown(f"**Current Score:** {risk_score:.2f} / 50")
+                st.markdown(f"**Risk Level:** {risk_label}")
+                st.markdown("This score represents predicted risk of lung cance provided environmental and demographic factors.")
+                
+                
+            st.write("")
+            st.write("")
+            
+            
 
-            
-            st.markdown(f"""
-            <div style="display: flex; justify-content: center;">
-                <div style="text-align: center;
-                            padding: 20px;
-                            border: 2px solid {border_color};
-                            border-radius: 10px;
-                            background-color: rgba(255,255,255,0.05);
-                            width: 864px;">
-                    <h2 style="color: {title_color};">Attention Score</h2>
-                    <h1 style="color: {score_color}; font-size: 3em">{risk_score:.2f}</h1>
-                    <h3 style="color: {label_color};">{risk_label}</h3>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
             st.markdown("### Variable Assessment")
-            
-            # Assess variables
+            st.write("")
+
             assessments = assess_variable_quality(st.session_state.inputs, lcr_data)
-            
+            severities  = compute_variable_severity(st.session_state.inputs, lcr_data)
 
-            html = "<div style='display: flex; gap: 16px;'>"
+            if not assessments:
+                st.info("No variables to assess. Please enter at least one value in the sidebar.")
+            else:
+                codes = list(assessments.keys())
+                cols = st.columns(len(codes))  # one row, left→right
 
-            for var_code, (status, rgba_color) in assessments.items():
-                value = st.session_state.inputs.get(var_code)
-                label = VARIABLES.get(var_code, var_code)
-                display_value = f"{value:.2f}" if isinstance(value, (int, float)) else "-"
+                for i, var_code in enumerate(codes):
+                    status, rgba_color = assessments[var_code]
+                    value = st.session_state.inputs.get(var_code)
+                    var_label = VARIABLES.get(var_code, var_code)
 
-                html += dedent(f"""
-                    <div style="
-                        background-color: {rgba_color};
-                        padding: 16px;
-                        border-radius: 10px;
-                        width: 160px;
-                        height: 140px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        text-align: center;
-                        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
-                    ">
-                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px;">
-                            {label}
-                        </div>
-                        <div style="font-size: 18px; font-weight: 600;">
-                            {display_value}
-                        </div>
-                        <div style="font-size: 14px; margin-top: 6px;">
-                            {status}
-                        </div>
-                    </div>
-                """)
+                    fig = create_variable_progress_chart(var_code, value, status, rgba_color, var_label)
+                    with cols[i]:
+                        # Keep the figure compact so they fit in one row
+                        fig.update_layout(width=160, height=160, margin=dict(l=0, r=0, t=0, b=0))
+                        st.plotly_chart(fig, use_container_width=False,
+                                        config={"displayModeBar": False},
+                                        key=f"var_progress_{var_code}_{i}")
 
-            html += "</div>"
+                        disp_val = f"{value:.2f}" if isinstance(value, (int, float)) else "-"
+                        st.markdown(
+                            f"""
+                            <div style="text-align:center; line-height:1.2; margin-top:-8px;">
+                                <div style="font-size:14px; font-weight:700;">{var_label}</div>
+                                <div style="font-size:11px; color:#bbb;">Value: {disp_val}</div>
+                                <div style="font-size:11px; color:#bbb;">Assessment: {status}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+            st.write("")
+            st.write("")
 
-            #print html
-            st.markdown(html, unsafe_allow_html=True)
-            
             # Policy recommendations
-            recommendations = get_policy_recommendations(assessments)
+            recommendations = get_policy_recommendations(assessments, severities)
             if recommendations:
                 st.markdown("### 🏳️ Policy Recommendations")
+
+                # CSS for card-like boxes
+                st.markdown(
+                    """
+                    <style>
+                    .policy-card {
+                        background-color: #1e1e1e;
+                        padding: 12px 16px;
+                        border-radius: 8px;
+                        box-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+                        margin-bottom: 10px;
+                        font-size: 14px;
+                        line-height: 1.4;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                # Render each recommendation inside its own box
                 for i, rec in enumerate(recommendations, 1):
-                    st.markdown(f"**{i}.** {rec}")
+                    st.markdown(f"<div class='policy-card'><b>{i}.</b> {rec}</div>", unsafe_allow_html=True)
             else:
                 st.write("#### Keep it up! 🎉")
         
@@ -496,14 +685,15 @@ def main():
                 # Show ranking chart
                 st.subheader("Global Ranking")
                 fig = create_ranking_chart(lcr_data, st.session_state.user_risk)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True, key = 'ranking_chart_global')
                 
             else:
                 # Show detailed comparison with selected country
                 if selected_country in lcr_data['Country'].values:
                     st.subheader(f"vs {selected_country}")
                     fig = create_detailed_comparison(lcr_data, st.session_state.inputs, selected_country)
-                    st.plotly_chart(fig, use_container_width=True)
+                    safe_country_key = selected_country.lower().replace(" ", "_")
+                    st.plotly_chart(fig, use_container_width=True, key=f"compare_chart_{safe_country_key}")
                 else:
                     st.warning(f"No data available for {selected_country}")
         else:
